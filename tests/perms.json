@@ -1,0 +1,21 @@
+{
+   "permission_map" :
+   [
+      [
+         "testuser",
+         {
+            "password_hash_b64" : "RpExU9TptTXpGtbPk/82L+MCGD7AgbdrOC2eCM9Fs3o=",
+            "password_salt_b64" : "fL605+JQDQw=",
+            "allowed_apis" : ["witness_api", "debug_api", "network_node_api"]
+         }
+      ],
+      [
+         "*",
+         {
+            "password_hash_b64" : "*",
+            "password_salt_b64" : "*",
+            "allowed_apis" : ["database_api", "network_broadcast_api", "history_api"]
+         }
+      ]
+   ]
+}

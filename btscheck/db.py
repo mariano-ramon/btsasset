@@ -3,8 +3,14 @@ from sqlalchemy import Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
+import btsconf
+btsconf.initcfg()
 
-engine = create_engine('sqlite:///./assets.db', echo=False)
+
+
+print(btsconf.confs['connstring'])
+engine = create_engine(btsconf.confs['connstring'], echo=False)
+#engine = create_engine(, echo=False)
 Base = declarative_base()
 
 Session = sessionmaker()
@@ -20,6 +26,15 @@ def execsql(stmt="", **kwargs):
             plain.append(list(r))
 
     return plain
+
+
+def execsqlb(stmt="", **kwargs):
+    with engine.connect() as conn:
+        result = conn.execute(text(stmt), **kwargs)
+
+
+    return result
+
 
 
 class BTSAsset(Base):
@@ -51,3 +66,4 @@ class BTSAsset(Base):
 
 def create_database():
     Base.metadata.create_all(engine)
+    
