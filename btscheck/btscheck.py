@@ -100,7 +100,6 @@ class BTSCheck:
 
         currblock =  btschain.get_current_block_num()
         startblock = srt * self.shuffle_rounds_alert
-        print("{},{}".format(currblock - startblock, currblock))
 
         c = ('{{"jsonrpc": "2.0", "params": ["database", "get_block_header_batch", '
             '[[{}]]], "method": "call", "id": 10}}'.format(",".join(str(x) for x in range(currblock - startblock, currblock))))
