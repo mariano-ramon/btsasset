@@ -1,3 +1,4 @@
-BTSChecks/assets.db
+btscheck/assets.db
+test_wallet.json
 *.log
 __pycache__

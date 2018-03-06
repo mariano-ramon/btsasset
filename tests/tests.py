@@ -46,6 +46,7 @@ btsc = None
 walletproc = None
 nodeproc = None
 
+SLEEP_INTERVAL = 6 # 6 seconds
 
 def setup_test():
 
@@ -153,13 +154,13 @@ def start_test_node():
 
 def approve_witnesses():
     btsconf.confs["bts"].approvewitness(["1.6.1","1.6.2","1.6.3","1.6.4","1.6.5","1.6.6","1.6.7","1.6.8","1.6.9","1.6.10","1.6.11"], 'nathan')
-    sleep(2)
+    sleep(SLEEP_INTERVAL)
 
 
 
 def start_test_wallet():
 
-    proc = Popen(["./cli_wallet", "--wallet-file=test_wallet.json",
+    proc = Popen(["./cli_wallet", "--wallet-file=/tmp/test_wallet.json",
                         "--chain-id=" + chainid,
                         "--server-rpc-endpoint=" + node, 
                         "--rpc-http-endpoint="+ wallethttp], cwd=walletpath)
@@ -205,7 +206,7 @@ def setup_env_for_testing():
     setup_local_wallet()
     approve_witnesses()
     print("Wait maitenance interval")
-    sleep(10)
+    sleep(SLEEP_INTERVAL)
     publish_test_feeds()
     get_assets()
     generate_test_blocks()

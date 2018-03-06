@@ -1,7 +1,8 @@
 from itertools import chain
-from datetime import datetime
+from datetime import datetime, timedelta
 from statistics import median
 from math import fabs
+from json import loads
 
 from bitshares import BitShares
 from bitshares.witness import Witnesses, Witness
@@ -52,26 +53,17 @@ class BTSCheck:
         r = BTSCheck.get_last_prices(asset)
         return median(r)
 
-    @staticmethod
-    def get_last_price_of(producers="ALL", asset="USD"):
-        """  returns a list with the settlement prices
-             of the last stored feeds from one, many or all producers
-        """
-        if producers == "ALL":
-            prods = BTSCheck.get_all_producers()
-        else:
-            prods = producers
 
-        r = execsql("select prices.producer, prices.sp from bts_asset as prices "
-                    "inner join (select max(timestamp) ts, producer from bts_asset group by producer, asset) last "
-                    "on prices.producer = last.producer "
-                    "and prices.timestamp = last.ts "
-                    "where prices.producer in ({})".format(",".join(map(repr, prods))))
-        print("select prices.producer, prices.sp from bts_asset as prices "
-                    "inner join (select max(timestamp) ts, producer from bts_asset group by producer, asset) last "
-                    "on prices.producer = last.producer "
-                    "and prices.timestamp = last.ts "
-                    "where prices.producer in ({})".format(",".join(map(repr, prods))))
+    @staticmethod
+    def get_recent_average_price(producer,asset="USD"):
+        """ get the average price of the last N feeds of a producer
+        """
+
+
+        fivemago = datetime.now() - timedelta(minutes=5)
+
+        r = execsql("select count(id), avg(sp) from bts_asset where "
+                    "producer = :producer and timestamp > :fiveminutesago", producer=producer, fiveminutesago=fivemago)
 
         return r
 
@@ -108,12 +100,21 @@ class BTSCheck:
 
         currblock =  btschain.get_current_block_num()
         startblock = srt * self.shuffle_rounds_alert
+        print("{},{}".format(currblock - startblock, currblock))
 
-        for bl in btschain.blocks(currblock - startblock, currblock):
-            if bl['witness'] == witness_id:
+        c = ('{{"jsonrpc": "2.0", "params": ["database", "get_block_header_batch", '
+            '[[{}]]], "method": "call", "id": 10}}'.format(",".join(str(x) for x in range(currblock - startblock, currblock))))
+
+        r = btsconf.confs["bts"].rpc.rpcexec(loads(c))
+
+
+        for bl in r:
+            if bl[1] and bl[1]['witness'] == witness_id:
                 block_created = True
 
+
         return block_created
+
 
 
     def get_witness_ids(self, name):
@@ -125,9 +126,14 @@ class BTSCheck:
     def price_out_range(self, producer, asset="USD"):
         """ returns true if there is a given percentage increase from the median of all last stored price feeds """
 
-        prod_,price = BTSCheck.get_last_price_of([producer], asset)[0]
+        is_out_range = False
+
+        cnt,price = BTSCheck.get_recent_average_price(producer, asset)[0]
         median = self.get_last_median()
-        return self.get_variance(median, price) > self.median_diff_alert
+        if cnt:
+            self.get_variance(median, price) > self.median_diff_alert
+
+        return is_out_range
 
     def check_producer(self, producer, assets):
 
